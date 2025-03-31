@@ -1,0 +1,22 @@
+{
+  "name": "aio3d-game",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:prod": "cross-env NODE_ENV=production tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "aio3d-core": "^0.0.1",
+    "three": "^0.161.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.161.1",
+    "cross-env": "^7.0.3",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
+  }
+}
