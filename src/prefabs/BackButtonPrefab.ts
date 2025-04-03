@@ -1,4 +1,4 @@
-import { Prefab, ComponentTypes, prefabRegistry } from "aio3d-core";
+import { Prefab, ComponentTypes } from "aio3d-core";
 
 export interface BackButtonConfig {
   onBackClick: () => void;

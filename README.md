@@ -28,7 +28,7 @@ AIO3D Engine is a modular 3D game engine built on Three.js, designed with a comp
 
 This template uses:
 - AIO3D Engine Core v0.0.2
-- Game Template v0.0.0
+- Game Template v0.0.2
 
 ## Documentation
 

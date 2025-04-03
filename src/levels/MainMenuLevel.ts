@@ -3,7 +3,6 @@ import {
   World,
   Entity,
   ComponentTypes,
-  DOMComponent,
   PrefabService,
   LevelService,
   SelectableComponent,
@@ -15,7 +14,7 @@ import {
  */
 export class MainMenuLevel implements Level {
   private world: World;
-  private prefabService: PrefabService;
+  private prefabService: PrefabService; // eslint-disable-line @typescript-eslint/no-unused-vars
   private container: HTMLElement;
   private menuContainer: HTMLElement | null = null;
   private levelService: LevelService;

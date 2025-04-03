@@ -1,7 +1,6 @@
 import {
   System,
   World,
-  Entity,
   ComponentTypes as CoreTypes,
   TransformComponent,
 } from "aio3d-core"; // Use absolute path or adjust

@@ -1,4 +1,4 @@
-import { Component, ComponentTypes as CoreTypes } from "aio3d-core";
+import { Component } from "aio3d-core";
 import { GameComponentTypes } from "./GameComponentTypes";
 import * as THREE from "three";
 

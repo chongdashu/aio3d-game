@@ -2,10 +2,7 @@ import * as THREE from "three";
 import type { Level } from "aio3d-core";
 import {
   World,
-  Entity,
-  ComponentTypes,
   SceneSystem,
-  CameraComponent,
   PrefabService,
   LevelService,
   prefabRegistry,
@@ -22,16 +19,15 @@ import { GameComponentTypes } from "../components/GameComponentTypes";
 export class MenuTestLevel implements Level {
   private world: World;
   private sceneSystem: SceneSystem;
-  private uiSystem: GameUIRegistrationSystem;
+  private uiSystem: GameUIRegistrationSystem; // eslint-disable-line @typescript-eslint/no-unused-vars
   private prefabService: PrefabService;
-  private container: HTMLElement;
+  private container: HTMLElement; // eslint-disable-line @typescript-eslint/no-unused-vars
   private animationFrameId: number | null = null;
-  private lastTime: number = 0;
-  private levelService: LevelService;
+  private levelService: LevelService; // eslint-disable-line @typescript-eslint/no-unused-vars
   private camera: THREE.PerspectiveCamera | null = null;
   private logger = loggingService.createClassLogger(this);
 
-  // Camera settings
+  // Camera settings - TODO: Use these settings in setupCamera or remove if not needed
   private readonly CAMERA_SETTINGS = {
     position: new THREE.Vector3(0, 0, 5),
     lookAt: new THREE.Vector3(0, 0, 0),

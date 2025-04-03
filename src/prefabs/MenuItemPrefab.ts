@@ -1,7 +1,6 @@
 import { Prefab, ComponentTypes as CoreTypes } from "aio3d-core";
 import { GameComponentTypes } from "../components/GameComponentTypes";
 import * as THREE from "three";
-import { MenuItemConfig } from "../components/ui/MenuItemComponent";
 
 /**
  * Configuration interface for MenuItemPrefab

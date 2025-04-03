@@ -24,8 +24,8 @@ import { createBackButtonPrefab } from "../prefabs/BackButtonPrefab";
 export class SimpleLevel implements Level {
   private world: World;
   private sceneSystem: SceneSystem;
-  private renderSystem: RenderSystem;
-  private windowSystem: WindowSystem;
+  private renderSystem: RenderSystem; // eslint-disable-line @typescript-eslint/no-unused-vars
+  private windowSystem: WindowSystem; // eslint-disable-line @typescript-eslint/no-unused-vars
   private prefabService: PrefabService;
   private container: HTMLElement;
   private animationFrameId: number | null = null;

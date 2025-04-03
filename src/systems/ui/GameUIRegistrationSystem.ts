@@ -3,13 +3,11 @@ import {
   World,
   Entity,
   ComponentTypes,
-  SceneSystem,
   MeshComponent,
   TransformComponent,
 } from "aio3d-core";
 import { GameComponentTypes } from "../../components/GameComponentTypes";
 import { TextComponent } from "../../components/ui/TextComponent";
-import * as THREE from "three";
 
 /**
  * Game-specific implementation of UI registration that extends

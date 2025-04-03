@@ -3,13 +3,11 @@ import {
   World,
   Entity,
   ComponentTypes,
-  SceneSystem,
   MeshComponent,
 } from "aio3d-core";
 
 // Import game-specific types and components
 import { GameComponentTypes } from "../components/GameComponentTypes";
-import { SpinningCubeComponent } from "../components/SpinningCubeComponent";
 
 /**
  * Game-specific implementation of mesh registration that extends
