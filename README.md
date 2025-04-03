@@ -27,7 +27,7 @@ npm run build
 AIO3D Engine is a modular 3D game engine built on Three.js, designed with a component-based architecture.
 
 This template uses:
-- AIO3D Engine Core v0.0.2
+- AIO3D Engine Core v0.0.3
 - Game Template v0.0.2
 
 ## Documentation
