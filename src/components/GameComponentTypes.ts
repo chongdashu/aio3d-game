@@ -4,7 +4,10 @@
  */
 export const GameComponentTypes = {
   /** Identifies the SpinningCubeComponent. */
-  SPINNING_CUBE: Symbol.for("game.spinningCube"),
+  SPINNING_CUBE: Symbol("SPINNING_CUBE"),
+  /** Identifies the MenuItemComponent for 3D menu interactions. */
+  MENU_ITEM: Symbol("MENU_ITEM"),
+  TEXT: Symbol("TEXT"),
   // --- Add other game-specific component type symbols here ---
   // e.g., PLAYER_STATS: Symbol.for("game.playerStats"),
   // e.g., HEALTH: Symbol.for("game.health"),

@@ -1,20 +1,29 @@
 {
   "name": "aio3d-game",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "build:prod": "cross-env NODE_ENV=production tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "tsc"
   },
   "dependencies": {
-    "three": "^0.161.0",
-    "aio3d-core": "^0.0.1"
+    "@react-three/fiber": "8.15.0",
+    "@react-three/drei": "9.90.0",
+    "aio3d-core": "^0.0.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "three": "0.158.0",
+    "three-mesh-bvh": "0.6.8",
+    "three-mesh-ui": "6.5.4"
   },
   "devDependencies": {
-    "@types/three": "^0.161.1",
+    "@types/react": "18.2.64",
+    "@types/react-dom": "18.2.21",
+    "@types/three": "0.158.0",
     "cross-env": "^7.0.3",
     "typescript": "^5.2.2",
     "vite": "^5.0.0"

@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 /**
  * Component holding data defining how an entity should spin.
- * Does not contain the mesh itself or update logic.
+ * Pure data container following ECS principles.
  */
 export class SpinningCubeComponent extends Component {
   public readonly type = GameComponentTypes.SPINNING_CUBE;
