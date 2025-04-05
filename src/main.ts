@@ -23,6 +23,7 @@ import {
   LogLevel,
   DOMUISystem,
   ContainerComponent,
+  OrbitCameraSystem,
 } from "aio3d-core";
 
 // Import game-specific setup
@@ -36,9 +37,10 @@ import "./prefabs";
 
 // Import Level implementations
 import { SimpleLevel } from "./levels/SimpleLevel";
-import { MainMenuLevel } from "./levels/MainMenuLevel";
-import { MenuTestLevel } from "./levels/MenuTestLevel";
-import { R3MainMenuLevel } from "./levels/R3MainMenuLevel";
+import { MainMenuLevel } from "./levels/menu/MainMenuLevel";
+import { MenuTestLevel } from "./levels/menu/MenuTestLevel";
+import { R3MainMenuLevel } from "./levels/menu/R3MainMenuLevel";
+import { CharacterLevel } from "./levels/CharacterLevel";
 
 // Create logger for main
 const logger = loggingService.createLogger("Main");
@@ -101,6 +103,7 @@ world.addSystem(new DOMUISystem());
 logger.info("Adding input systems");
 world.addSystem(new InputSystem());
 world.addSystem(new UINavigationSystem());
+world.addSystem(new OrbitCameraSystem()); // Add orbit camera after input system
 
 // 6. Add Game-Specific Systems (including listeners)
 // MeshRegistrationSystem depends on SceneSystem, so add it after.
@@ -174,9 +177,14 @@ registry.registerLevel(
   }
 );
 
+registry.registerLevel(
+    'CHARACTER_LEVEL',
+    (container, world, prefabService, levelService) =>
+      new CharacterLevel(container, world, prefabService, levelService)
+  );
+
 // 11. Start with the R3 menu
-logger.info("Changing to R3_MENU level");
-levelService.changeLevel("R3_MENU");
+levelService.changeLevel("MAIN_MENU");
 
 // Expose core elements to window for debugging
 logger.debug("Exposing debug objects to window");

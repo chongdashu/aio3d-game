@@ -1,4 +1,8 @@
-import { ComponentFactoryRegistry, loggingService } from "aio3d-core";
+import {
+  ComponentFactoryRegistry,
+  loggingService,
+  ComponentTypes,
+} from "aio3d-core";
 import * as THREE from "three";
 
 // Import game-specific types and components

@@ -1,38 +1,22 @@
 import * as THREE from "three";
-import type { Level } from "aio3d-core";
 import {
-  World,
-  Entity,
   ComponentTypes,
-  RenderSystem,
-  SceneSystem,
   CameraComponent,
-  WindowSystem,
-  PrefabService,
-  LevelService,
-  loggingService,
   prefabRegistry,
+  CoreDebugUISystem,
+  createDebugUIPrefab,
 } from "aio3d-core";
+import { BaseLevel } from "./BaseLevel";
 
 // Import prefab definitions to ensure registration
-import "../prefabs/GroundPlanePrefab";
+import "../prefabs/simple/GroundPlanePrefab";
 import { createBackButtonPrefab } from "../prefabs/BackButtonPrefab";
+import { createOrbitCameraPrefab } from "aio3d-core/src/prefabs/camera/OrbitCameraPrefab";
 
 /**
- * SimpleScene that displays a cube with lighting, using the prefab system.
+ * SimpleLevel that displays a cube with lighting, using the prefab system.
  */
-export class SimpleLevel implements Level {
-  private world: World;
-  private sceneSystem: SceneSystem;
-  private renderSystem: RenderSystem; // eslint-disable-line @typescript-eslint/no-unused-vars
-  private windowSystem: WindowSystem; // eslint-disable-line @typescript-eslint/no-unused-vars
-  private prefabService: PrefabService;
-  private container: HTMLElement;
-  private animationFrameId: number | null = null;
-  private lastTime: number = 0;
-  private levelService: LevelService | null = null;
-  private logger = loggingService.createClassLogger(this);
-
+export class SimpleLevel extends BaseLevel {
   // UI elements
   private uiContainer: HTMLElement | null = null;
 
@@ -44,44 +28,15 @@ export class SimpleLevel implements Level {
   };
 
   /**
-   * Creates a new SimpleScene
-   * @param container - The container element to render to
-   * @param world - The ECS world instance.
-   * @param prefabService - The service for creating entities from prefabs.
-   * @param levelService - Optional level service for level transitions
+   * Sets up all level-specific elements
    */
-  constructor(
-    container: HTMLElement,
-    world: World,
-    prefabService: PrefabService,
-    levelService?: LevelService
-  ) {
-    this.container = container;
-    this.world = world;
-    this.prefabService = prefabService;
-    this.levelService = levelService || null;
-
-    // Get systems from the world instead of creating them here
-    // Assumes systems were added to the world in main.ts or elsewhere
-    const sceneSys = world
-      .getSystems()
-      .find((sys): sys is SceneSystem => sys instanceof SceneSystem);
-    const renderSys = world
-      .getSystems()
-      .find((sys): sys is RenderSystem => sys instanceof RenderSystem);
-    const windowSys = world
-      .getSystems()
-      .find((sys): sys is WindowSystem => sys instanceof WindowSystem);
-
-    if (!sceneSys || !renderSys || !windowSys) {
-      const error =
-        "Required systems (Scene, Render, Window) not found in the world.";
-      this.logger.error(error);
-      throw new Error(`SimpleLevel Error: ${error}`);
-    }
-    this.sceneSystem = sceneSys;
-    this.renderSystem = renderSys;
-    this.windowSystem = windowSys;
+  protected setupLevel(): void {
+    this.setupCamera();
+    this.setupLighting();
+    this.addGroundPlane();
+    this.addSpinningCube();
+    this.setupUI();
+    this.setupDebugUI();
   }
 
   /**
@@ -100,6 +55,7 @@ export class SimpleLevel implements Level {
     const uiContainer = document.createElement("div");
     uiContainer.className = "game-ui";
     this.container.appendChild(uiContainer);
+    this.uiContainer = uiContainer;
 
     // Create back button using prefab
     const backButtonPrefab = createBackButtonPrefab({
@@ -161,36 +117,39 @@ export class SimpleLevel implements Level {
    * Sets up the camera entity
    */
   private setupCamera(): void {
-    this.logger.info("Setting up camera");
-    const cameraEntity = new Entity();
-    const cameraComponent = new CameraComponent(
-      this.container.clientWidth,
-      this.container.clientHeight,
-      this.CAMERA_SETTINGS.fov
+    this.logger.info("Setting up orbit camera");
+
+    const cameraPrefab = createOrbitCameraPrefab({
+      width: this.container.clientWidth,
+      height: this.container.clientHeight,
+      target: new THREE.Vector3(0, 0.5, 0),
+      distance: 8,
+      fov: 60,
+      orbitSettings: {
+        minDistance: 3,
+        maxDistance: 20,
+        rotationSpeed: 1.0,
+        panSpeed: 1.0,
+        zoomSpeed: 0.5,
+      },
+    });
+
+    // Register the prefab before using it
+    prefabRegistry.registerPrefab(cameraPrefab);
+
+    const cameraEntity = this.prefabService.createEntityFromPrefab(
+      cameraPrefab.name
     );
 
-    // Set camera position and orientation using type assertions to handle version mismatch
-    cameraComponent.camera.position.set(
-      this.CAMERA_SETTINGS.position.x,
-      this.CAMERA_SETTINGS.position.y,
-      this.CAMERA_SETTINGS.position.z
-    );
-    cameraComponent.camera.lookAt(
-      this.CAMERA_SETTINGS.lookAt.x,
-      this.CAMERA_SETTINGS.lookAt.y,
-      this.CAMERA_SETTINGS.lookAt.z
-    );
+    if (!cameraEntity) {
+      this.logger.error("Failed to create orbit camera entity from prefab");
+      return;
+    }
 
-    cameraEntity.addComponent(ComponentTypes.CAMERA, cameraComponent);
-    this.world.addEntity(cameraEntity);
-
-    // Add camera to scene
-    this.sceneSystem.addToScene(cameraComponent.camera);
-
-    this.logger.debug("Camera setup complete", {
-      position: cameraComponent.camera.position,
-      lookAt: this.CAMERA_SETTINGS.lookAt,
-      fov: this.CAMERA_SETTINGS.fov,
+    this.logger.debug("Orbit camera setup complete", {
+      target: new THREE.Vector3(0, 0.5, 0),
+      distance: 8,
+      fov: 60,
     });
   }
 
@@ -264,190 +223,42 @@ export class SimpleLevel implements Level {
       return;
     }
 
-    // NO NEED to add mesh to scene here!
-    // The MeshRegistrationSystem listens for the 'entityCreatedFromPrefab' event
-    // and handles adding the mesh (from SpinningCubeComponent or MeshComponent)
-    // to the SceneSystem.
     this.logger.debug(
       `Spinning cube entity (ID: ${cubeEntity.id}) created via prefab successfully.`
     );
   }
 
   /**
-   * Starts the animation loop
+   * Sets up the debug UI for monitoring camera properties
    */
-  public start(): void {
-    this.logger.info("start() called");
+  private setupDebugUI(): void {
+    this.logger.info("Setting up debug UI");
 
-    // Clear the scene first to avoid duplicates
-    const scene = this.sceneSystem.getScene();
-    this.logger.debug("Initial scene children count:", scene.children.length);
+    // Add and initialize the debug UI system
+    const debugSystem = new CoreDebugUISystem();
+    this.world.addSystem(debugSystem);
+    debugSystem.initialize(this.world);
+    this.logger.info("Debug UI system added and initialized");
 
-    // Add a small delay before initializing to ensure previous level cleanup is complete
-    setTimeout(() => {
-      this.initializeLevel();
-    }, 50);
-  }
+    // Register and create debug UI entity
+    const debugUIPrefab = createDebugUIPrefab();
+    prefabRegistry.registerPrefab(debugUIPrefab);
+    const debugUIEntity = this.prefabService.createEntityFromPrefab(
+      debugUIPrefab.name
+    );
 
-  /**
-   * Initialize the level after a delay
-   */
-  private async initializeLevel(): Promise<void> {
-    try {
-      this.logger.info("Initializing level");
-
-      // Access and configure renderer
-      const renderer = this.sceneSystem.getRenderer();
-      const canvas = renderer.domElement;
-
-      // Add context loss listener
-      canvas.addEventListener("webglcontextlost", this.handleContextLoss);
-
-      // Force renderer reinitialization to ensure clean WebGL context
-      await this.sceneSystem.reinitializeRenderer();
-
-      // Setup event listeners for context recovery
-      const newCanvas = this.sceneSystem.getRenderer().domElement;
-      newCanvas.addEventListener(
-        "webglcontextrestored",
-        this.handleContextRestored
-      );
-
-      // Only proceed if renderer is ready
-      if (this.sceneSystem.isRendererReady()) {
-        // Set up the scene (DOM entity is now persistent)
-        this.setupCamera();
-        this.setupLighting();
-        this.addGroundPlane();
-        this.addSpinningCube();
-        this.setupUI();
-
-        this.logger.debug(
-          "Scene setup complete. Scene children count:",
-          this.sceneSystem.getScene().children.length
-        );
-
-        // Log the camera and other critical objects
-        const cameraEntities = this.world.queryComponents([
-          ComponentTypes.CAMERA,
-        ]);
-        this.logger.debug("Camera entities found:", cameraEntities.length);
-
-        const renderables = this.world.queryComponents([
-          ComponentTypes.TRANSFORM,
-          ComponentTypes.MESH,
-        ]);
-        this.logger.debug("Renderable entities found:", renderables.length);
-
-        if (this.animationFrameId === null) {
-          this.lastTime = performance.now();
-          this.animate();
-          this.logger.info("Animation loop started");
-        }
-      } else {
-        this.logger.error("Failed to initialize renderer");
-      }
-    } catch (error) {
-      this.logger.error("Error during initializeLevel()", error);
-    }
-  }
-
-  /**
-   * Handle WebGL context loss
-   */
-  private handleContextLoss = (event: Event): void => {
-    this.logger.warn("WebGL context lost, preventing default");
-    event.preventDefault();
-
-    // Stop animation loop
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
-
-    this.logger.info("Will attempt context recovery");
-  };
-
-  /**
-   * Handle WebGL context restoration
-   */
-  private handleContextRestored = (): void => {
-    this.logger.info("WebGL context restored, reinitializing scene");
-
-    // Reinitialize the scene
-    this.sceneSystem.reinitializeRenderer();
-    this.setupCamera();
-    this.setupLighting();
-
-    // Restart animation loop if needed
-    if (this.animationFrameId === null) {
-      this.lastTime = performance.now();
-      this.animate();
-    }
-  };
-
-  /**
-   * Animation loop
-   */
-  private animate(): void {
-    this.animationFrameId = requestAnimationFrame(() => this.animate());
-
-    const currentTime = performance.now();
-    const deltaTime = (currentTime - this.lastTime) / 1000; // Convert to seconds
-    this.lastTime = currentTime;
-
-    try {
-      // Update world (which updates all systems)
-      this.world.update(deltaTime);
-
-      // Only render if renderer is ready
-      if (this.sceneSystem.isRendererReady()) {
-        this.render();
-      }
-    } catch (error) {
-      this.logger.error("Error in animation loop", error);
-      this.stop(); // Stop the animation loop if there's an error
-    }
-  }
-
-  /**
-   * Renders the scene
-   */
-  private render(): void {
-    // Only proceed if renderer is ready
-    if (!this.sceneSystem.isRendererReady()) {
+    if (!debugUIEntity) {
+      this.logger.error("Failed to create debug UI entity");
       return;
     }
 
-    const cameraEntities = this.world.queryComponents([ComponentTypes.CAMERA]);
-    const cameraEntity = cameraEntities[0];
-
-    if (cameraEntity) {
-      const cameraComponent = cameraEntity.getComponent(
-        ComponentTypes.CAMERA
-      ) as CameraComponent;
-
-      if (cameraComponent) {
-        const camera = cameraComponent.getCamera();
-        this.sceneSystem.render(camera);
-      }
-    }
+    this.logger.info("Debug UI setup complete");
   }
 
   /**
-   * Gets the world instance
+   * Cleanup level-specific resources
    */
-  public getWorld(): World {
-    return this.world;
-  }
-
-  /**
-   * Cleans up resources
-   */
-  public cleanup(): void {
-    this.logger.info("cleanup() called");
-    this.stop();
-
+  protected cleanupLevelSpecifics(): void {
     // Remove UI elements from DOM
     if (this.uiContainer && this.container.contains(this.uiContainer)) {
       this.container.removeChild(this.uiContainer);
@@ -456,21 +267,10 @@ export class SimpleLevel implements Level {
   }
 
   /**
-   * Stops the animation loop
+   * Recreate scene elements after context restoration
    */
-  public stop(): void {
-    this.logger.info("stop() called");
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
-
-    // Remove context event listeners
-    const canvas = this.sceneSystem.getRenderer().domElement;
-    canvas.removeEventListener("webglcontextlost", this.handleContextLoss);
-    canvas.removeEventListener(
-      "webglcontextrestored",
-      this.handleContextRestored
-    );
+  protected recreateSceneAfterContextRestore(): void {
+    this.setupCamera();
+    this.setupLighting();
   }
 }
