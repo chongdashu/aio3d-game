@@ -5,13 +5,13 @@ import {
   prefabRegistry,
   CoreDebugUISystem,
   createDebugUIPrefab,
+  createOrbitCameraPrefab
 } from "aio3d-core";
 import { BaseLevel } from "./BaseLevel";
 
 // Import prefab definitions to ensure registration
 import "../prefabs/simple/GroundPlanePrefab";
 import { createBackButtonPrefab } from "../prefabs/BackButtonPrefab";
-import { createOrbitCameraPrefab } from "aio3d-core/src/prefabs/camera/OrbitCameraPrefab";
 
 /**
  * SimpleLevel that displays a cube with lighting, using the prefab system.
