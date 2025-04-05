@@ -113,7 +113,7 @@ export class MainMenuLevel extends BaseLevel {
         0,
         () => {
           this.logger.info("Start Game button clicked, changing to game level");
-          this.levelService.changeLevel("GAME");
+          this.levelService!.changeLevel("GAME");
         },
         buttonContainer
       );
@@ -123,7 +123,7 @@ export class MainMenuLevel extends BaseLevel {
         1,
         () => {
           this.logger.info("Character Demo button clicked, changing to character level");
-          this.levelService.changeLevel("CHARACTER_LEVEL");
+          this.levelService!.changeLevel("CHARACTER_LEVEL");
         },
         buttonContainer
       );
