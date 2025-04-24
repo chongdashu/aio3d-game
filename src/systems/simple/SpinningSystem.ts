@@ -6,8 +6,8 @@ import {
 } from "aio3d-core"; // Use absolute path or adjust
 
 // Import game-specific types and components
-import { GameComponentTypes } from "../components/GameComponentTypes";
-import { SpinningCubeComponent } from "../components/SpinningCubeComponent";
+import { GameComponentTypes } from "../../components/GameComponentTypes";
+import { SpinningCubeComponent } from "../../components/SpinningCubeComponent";
 
 /**
  * System responsible for updating the rotation of entities

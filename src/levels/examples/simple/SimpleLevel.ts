@@ -7,11 +7,11 @@ import {
   createDebugUIPrefab,
   createOrbitCameraPrefab
 } from "aio3d-core";
-import { BaseLevel } from "./BaseLevel";
+import { BaseLevel } from "../../BaseLevel";
 
 // Import prefab definitions to ensure registration
-import "../prefabs/simple/GroundPlanePrefab";
-import { createBackButtonPrefab } from "../prefabs/BackButtonPrefab";
+import "../../../prefabs/simple/GroundPlanePrefab";
+import { createBackButtonPrefab } from "../../../prefabs/BackButtonPrefab";
 
 /**
  * SimpleLevel that displays a cube with lighting, using the prefab system.
@@ -62,7 +62,7 @@ export class SimpleLevel extends BaseLevel {
       onBackClick: () => {
         if (this.levelService) {
           this.logger.info("Back button clicked - returning to menu");
-          this.levelService.changeLevel("R3_MENU");
+          this.levelService.changeLevel("MAIN_MENU");
         } else {
           this.logger.warn(
             "Cannot navigate to menu - LevelService not available"
@@ -95,7 +95,7 @@ export class SimpleLevel extends BaseLevel {
       .game-ui {
         position: absolute;
         top: 20px;
-        right: 20px;
+        left: 20px;
         z-index: 100;
       }
 

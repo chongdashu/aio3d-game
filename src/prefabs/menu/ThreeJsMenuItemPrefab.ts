@@ -5,7 +5,7 @@ import * as THREE from "three";
 /**
  * Configuration interface for MenuItemPrefab
  */
-export interface MenuItemPrefabConfig {
+export interface ThreeJsMenuItemPrefabConfig {
   /** The text to display on the menu item */
   text: string;
   /** Callback function to execute when the menu item is clicked */
@@ -37,7 +37,7 @@ export interface MenuItemPrefabConfig {
  * @param config - Configuration for the menu item
  * @returns Prefab definition for the menu item
  */
-export const createMenuItemPrefab = (config: MenuItemPrefabConfig): Prefab => {
+export const createThreeJsMenuItemPrefab = (config: ThreeJsMenuItemPrefabConfig): Prefab => {
   const position = config.position ?? new THREE.Vector3(0, 0, 0);
   const rotation = config.rotation ?? new THREE.Euler(0, 0, 0);
   const scale = config.scale ?? new THREE.Vector3(1, 1, 1);

@@ -15,7 +15,7 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "jsx": "react-jsx",
-    "types": ["react", "react-dom", "three"],
+    "types": ["three"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],

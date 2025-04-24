@@ -8,7 +8,7 @@ import {
   SelectableComponent,
   loggingService,
 } from "aio3d-core";
-import { BaseLevel } from "../BaseLevel";
+import { BaseLevel } from "./BaseLevel";
 
 /**
  * Handles the main menu screen of the game using DOM-based UI
@@ -113,7 +113,7 @@ export class MainMenuLevel extends BaseLevel {
         0,
         () => {
           this.logger.info("Start Game button clicked, changing to game level");
-          this.levelService!.changeLevel("GAME");
+          this.levelService?.changeLevel("GAME");
         },
         buttonContainer
       );
@@ -123,14 +123,36 @@ export class MainMenuLevel extends BaseLevel {
         1,
         () => {
           this.logger.info("Character Demo button clicked, changing to character level");
-          this.levelService!.changeLevel("CHARACTER_LEVEL");
+          this.levelService?.changeLevel("CHARACTER_LEVEL");
+        },
+        buttonContainer
+      );
+
+      // Physics Collision Demo
+      this.createMenuButton(
+        "Physics Collision Demo",
+        2,
+        () => {
+          this.logger.info("Physics Collision button clicked, changing level to PHYSICS_COLLISION");
+          this.levelService?.changeLevel("PHYSICS_COLLISION");
+        },
+        buttonContainer
+      );
+
+      // Physics Overlap Demo
+      this.createMenuButton(
+        "Physics Overlap Demo",
+        3,
+        () => {
+          this.logger.info("Physics Overlap button clicked, changing level to PHYSICS_OVERLAP");
+          this.levelService?.changeLevel("PHYSICS_OVERLAP");
         },
         buttonContainer
       );
 
       this.createMenuButton(
         "Options",
-        2,
+        4,
         () => {
           this.logger.info("Options button clicked - not implemented");
         },
@@ -139,7 +161,7 @@ export class MainMenuLevel extends BaseLevel {
 
       this.createMenuButton(
         "Credits",
-        3,
+        5,
         () => {
           this.logger.info("Credits button clicked - not implemented");
         },
@@ -150,7 +172,7 @@ export class MainMenuLevel extends BaseLevel {
     // Add event listeners for selection changes
     const buttonElements = buttonContainer.children;
     for (const button of buttonElements) {
-      if (button) {
+      if (button instanceof HTMLElement) {
         button.addEventListener("click", () => {
           this.logger.info("Button clicked");
         });
@@ -184,7 +206,7 @@ export class MainMenuLevel extends BaseLevel {
     button.className = "menu-button";
     button.dataset.index = index.toString();
     button.textContent = text;
-    if (button) {
+    if (button instanceof HTMLElement) {
       button.addEventListener("click", onClick);
     }
     parent.appendChild(button);
@@ -204,7 +226,7 @@ export class MainMenuLevel extends BaseLevel {
     (menuEntity as any).domElement = button;
 
     // Add hover event to emit ui_mouse_hover event
-    if (button) {
+    if (button instanceof HTMLElement) {
       button.addEventListener("mouseenter", () => {
         this.world.eventBus.emit("ui_mouse_hover", { entityId: menuEntity.id });
       });

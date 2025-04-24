@@ -50,6 +50,22 @@ const groundPlanePrefab: Prefab = {
         receiveShadow: true, // Ground will receive shadows
       },
     },
+    // Static rigid body for physics
+    {
+      type: CoreTypes.RIGID_BODY,
+      data: {
+        bodyType: "static",
+      },
+    },
+    // Collider representing the ground plane as a thin box
+    {
+      type: CoreTypes.COLLIDER,
+      data: {
+        shape: "box",
+        size: [1, 1, 1],
+        isSensor: false,
+      },
+    },
   ],
 };
 

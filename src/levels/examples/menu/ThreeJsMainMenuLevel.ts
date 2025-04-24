@@ -8,15 +8,15 @@ import {
   prefabRegistry,
   loggingService,
 } from "aio3d-core";
-import { GameUIRegistrationSystem } from "../../systems/ui/GameUIRegistrationSystem";
+import { GameUIRegistrationSystem } from "../../../systems/ui/ThreeJsMenuUIRegistrationSystem";
 
-import { createMenuItemPrefab } from "../../prefabs/menu/MenuItemPrefab";
-import { GameComponentTypes } from "../../components/GameComponentTypes";
+import { createThreeJsMenuItemPrefab } from "../../../prefabs/menu/ThreeJsMenuItemPrefab";
+import { GameComponentTypes } from "../../../components/GameComponentTypes";
 
 /**
  * Test level for verifying menu item implementation
  */
-export class MenuTestLevel implements Level {
+export class ThreeJsMainMenu implements Level {
   private world: World;
   private sceneSystem: SceneSystem;
   private uiSystem: GameUIRegistrationSystem; // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -151,7 +151,7 @@ export class MenuTestLevel implements Level {
 
     menuItems.forEach((item, index) => {
       this.logger.debug(`Creating menu item: ${item.text}`, { index });
-      const prefab = createMenuItemPrefab({
+      const prefab = createThreeJsMenuItemPrefab({
         text: item.text,
         callback: item.callback,
         position: new THREE.Vector3(0, item.y, 0),

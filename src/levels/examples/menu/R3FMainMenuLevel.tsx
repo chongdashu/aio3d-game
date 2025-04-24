@@ -158,7 +158,7 @@ function MainMenu({
   );
 }
 
-export class R3MainMenuLevel implements Level {
+export class R3FMainMenuLevel implements Level {
   private world: World;
   private reactRoot: Root | null = null;
   private levelService: LevelService;
