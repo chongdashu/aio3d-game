@@ -1,5 +1,5 @@
-import { ModelComponent, Entity, TransformComponent } from 'aio3d-core';
-import * as THREE from 'three';
+import { ModelComponent, Entity, TransformComponent } from "aio3d-core";
+import * as THREE from "three";
 import {
   ComponentTypes,
   CameraComponent,
@@ -13,15 +13,15 @@ import {
   WindowSystem,
   RenderSystem,
   OrbitControlComponent,
-} from 'aio3d-core';
-import { BaseLevel } from '@/levels/BaseLevel';
-import { inspectAllAnimations } from '@/plugins/aiobot/utils/inspectAnimations';
-import { CharacterUISystem } from '@/plugins/aiobot/systems/AioBotCharacterUISystem';
+} from "aio3d-core";
+import { BaseLevel } from "@/levels/BaseLevel";
+import { inspectAllAnimations } from "@/plugins/aiobot/utils/inspectAnimations";
+import { CharacterUISystem } from "@/plugins/aiobot/systems/AioBotCharacterUISystem";
 
 // Import prefab definitions to ensure registration
-import '@/prefabs/simple/GroundPlanePrefab';
-import { createAiBotPrefab } from '@/plugins/aiobot/prefabs/AiBotPrefab';
-import { createBackButtonPrefab } from '@/prefabs/BackButtonPrefab';
+import "@/prefabs/simple/GroundPlanePrefab";
+import { createAiBotPrefab } from "@/plugins/aiobot/prefabs/AiBotPrefab";
+import { createBackButtonPrefab } from "@/prefabs/BackButtonPrefab";
 
 /**
  * CharacterLevel that displays the AiBot character model with animations
@@ -31,7 +31,7 @@ export class AioBotCharacterLevel extends BaseLevel {
   private uiContainer: HTMLElement | null = null;
 
   // Character entity
-  private aiBotEntity: number | null = null;
+  private aiBotEntity: Entity | null = null;
 
   /**
    * Sets up all level-specific elements
@@ -54,23 +54,25 @@ export class AioBotCharacterLevel extends BaseLevel {
     this.setupDebugUI();
 
     // Inspect all animations to see their correct names
-    inspectAllAnimations().then(() => {
-      this.logger.info('Animation inspection complete');
-    }).catch(error => {
-      this.logger.error('Error inspecting animations:', error);
-    });
+    inspectAllAnimations()
+      .then(() => {
+        this.logger.info("Animation inspection complete");
+      })
+      .catch((error) => {
+        this.logger.error("Error inspecting animations:", error);
+      });
 
     // Add the AI Bot directly - don't wait for an event
-    this.logger.info('Adding AI Bot character');
+    this.logger.info("Adding AI Bot character");
     this.addAiBot();
 
     // Initialize with idle animation
     setTimeout(() => {
-      this.logger.info('Setting initial idle animation');
-      this.world.eventBus.emit('animation_state_change', {
+      this.logger.info("Setting initial idle animation");
+      this.world.eventBus.emit("animation_state_change", {
         entityId: this.aiBotEntity,
-        state: 'idle',
-        loop: true
+        state: "idle",
+        loop: true,
       });
     }, 2000);
   }
@@ -79,7 +81,7 @@ export class AioBotCharacterLevel extends BaseLevel {
    * Clean up level-specific resources
    */
   protected cleanupLevelSpecifics(): void {
-    this.logger.info('Cleaning up CharacterLevel');
+    this.logger.info("Cleaning up CharacterLevel");
 
     // Remove UI elements
     if (this.uiContainer && this.uiContainer.parentNode) {
@@ -91,7 +93,7 @@ export class AioBotCharacterLevel extends BaseLevel {
    * Recreate scene elements after context restoration
    */
   protected recreateSceneAfterContextRestore(): void {
-    this.logger.info('Recreating scene after context restoration');
+    this.logger.info("Recreating scene after context restoration");
 
     // Re-setup the level
     this.setupCamera();
@@ -107,17 +109,17 @@ export class AioBotCharacterLevel extends BaseLevel {
     const systems = this.world.getSystems();
 
     // Scene system must be added first
-    if (!systems.some(system => system instanceof SceneSystem)) {
+    if (!systems.some((system) => system instanceof SceneSystem)) {
       this.world.addSystem(new SceneSystem());
     }
 
     // Add window system if needed
-    if (!systems.some(system => system instanceof WindowSystem)) {
+    if (!systems.some((system) => system instanceof WindowSystem)) {
       this.world.addSystem(new WindowSystem());
     }
 
     // Add render system if needed
-    if (!systems.some(system => system instanceof RenderSystem)) {
+    if (!systems.some((system) => system instanceof RenderSystem)) {
       this.world.addSystem(new RenderSystem());
     }
   }
@@ -129,19 +131,21 @@ export class AioBotCharacterLevel extends BaseLevel {
     const systems = this.world.getSystems();
 
     // Add model-related systems
-    if (!systems.some(system => system instanceof ModelSystem)) {
+    if (!systems.some((system) => system instanceof ModelSystem)) {
       this.world.addSystem(new ModelSystem());
-      this.logger.info('Added ModelSystem');
+      this.logger.info("Added ModelSystem");
     }
 
-    if (!systems.some(system => system instanceof ModelRegistrationSystem)) {
+    if (!systems.some((system) => system instanceof ModelRegistrationSystem)) {
       this.world.addSystem(new ModelRegistrationSystem());
-      this.logger.info('Added ModelRegistrationSystem');
+      this.logger.info("Added ModelRegistrationSystem");
     }
 
-    if (!systems.some(system => system instanceof AnimationControllerSystem)) {
+    if (
+      !systems.some((system) => system instanceof AnimationControllerSystem)
+    ) {
       this.world.addSystem(new AnimationControllerSystem());
-      this.logger.info('Added AnimationControllerSystem');
+      this.logger.info("Added AnimationControllerSystem");
     }
   }
 
@@ -151,9 +155,9 @@ export class AioBotCharacterLevel extends BaseLevel {
   private addCharacterUISystem(): void {
     const systems = this.world.getSystems();
 
-    if (!systems.some(system => system instanceof CharacterUISystem)) {
+    if (!systems.some((system) => system instanceof CharacterUISystem)) {
       this.world.addSystem(new CharacterUISystem());
-      this.logger.info('Added CharacterUISystem');
+      this.logger.info("Added CharacterUISystem");
     }
   }
 
@@ -161,17 +165,17 @@ export class AioBotCharacterLevel extends BaseLevel {
    * Sets up the DOM-based UI
    */
   private setupBackButton(): void {
-    this.logger.info('Setting up back button');
+    this.logger.info("Setting up back button");
 
     // Ensure container is available
     if (!this.container) {
-      this.logger.error('Main container not found!');
+      this.logger.error("Main container not found!");
       return;
     }
 
     // Create UI container
-    const uiContainer = document.createElement('div');
-    uiContainer.className = 'game-ui';
+    const uiContainer = document.createElement("div");
+    uiContainer.className = "game-ui";
     this.container.appendChild(uiContainer);
     this.uiContainer = uiContainer;
 
@@ -179,11 +183,11 @@ export class AioBotCharacterLevel extends BaseLevel {
     const backButtonPrefab = createBackButtonPrefab({
       onBackClick: () => {
         if (this.levelService) {
-          this.logger.info('Back button clicked - returning to menu');
-          this.levelService.changeLevel('MAIN_MENU');
+          this.logger.info("Back button clicked - returning to menu");
+          this.levelService.changeLevel("MAIN_MENU");
         } else {
           this.logger.warn(
-            'Cannot navigate to menu - LevelService not available'
+            "Cannot navigate to menu - LevelService not available"
           );
         }
       },
@@ -196,7 +200,7 @@ export class AioBotCharacterLevel extends BaseLevel {
     );
 
     if (!backButtonEntity) {
-      this.logger.error('Failed to create back button entity');
+      this.logger.error("Failed to create back button entity");
       return;
     }
 
@@ -208,7 +212,7 @@ export class AioBotCharacterLevel extends BaseLevel {
    * Adds CSS styles for the UI
    */
   private addStyles(): void {
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       .game-ui {
         position: absolute;
@@ -265,7 +269,7 @@ export class AioBotCharacterLevel extends BaseLevel {
    * Sets up the camera for this level
    */
   private setupCamera(): void {
-    this.logger.info('Setting up camera for character viewing');
+    this.logger.info("Setting up camera for character viewing");
 
     // Create basic camera entity
     const cameraEntity = new Entity();
@@ -294,21 +298,21 @@ export class AioBotCharacterLevel extends BaseLevel {
         zoomSpeed: 1.0,
         enableRotate: true,
         enableZoom: true,
-        enablePan: true
+        enablePan: true,
       }
     );
     orbitControl.enabled = true;
     cameraEntity.addComponent(orbitControl);
 
     this.world.addEntity(cameraEntity);
-    this.logger.debug('Camera setup complete');
+    this.logger.debug("Camera setup complete");
   }
 
   /**
    * Sets up lighting for the scene
    */
   private setupLighting(): void {
-    this.logger.info('Setting up lighting');
+    this.logger.info("Setting up lighting");
 
     // Add ambient light
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
@@ -340,13 +344,14 @@ export class AioBotCharacterLevel extends BaseLevel {
    * Adds a simple ground plane to the scene
    */
   private addGroundPlane(): void {
-    this.logger.info('Adding ground plane');
+    this.logger.info("Adding ground plane");
 
     // Create a ground plane entity from the registered prefab
-    const groundEntity = this.prefabService.createEntityFromPrefab('GroundPlane');
+    const groundEntity =
+      this.prefabService.createEntityFromPrefab("GroundPlane");
 
     if (!groundEntity) {
-      this.logger.error('Failed to create ground plane entity');
+      this.logger.error("Failed to create ground plane entity");
     }
   }
 
@@ -354,52 +359,56 @@ export class AioBotCharacterLevel extends BaseLevel {
    * Adds the AI Bot character to the scene
    */
   private addAiBot(): void {
-    this.logger.info('Adding AI Bot character');
+    this.logger.info("Adding AI Bot character");
 
     // Create the AI Bot prefab
     const aiBotPrefab = createAiBotPrefab({
       position: new THREE.Vector3(0, 0, 0),
       rotation: new THREE.Euler(0, 0, 0),
       scale: new THREE.Vector3(1, 1, 1),
-      initialAnimation: 'idle',
+      initialAnimation: "idle",
     });
 
     // Register the prefab
     prefabRegistry.registerPrefab(aiBotPrefab);
 
     // Create the entity from the prefab
-    const aiBotEntity = this.prefabService.createEntityFromPrefab(aiBotPrefab.name);
+    const aiBotEntity = this.prefabService.createEntityFromPrefab(
+      aiBotPrefab.name
+    );
 
     if (!aiBotEntity) {
-      this.logger.error('Failed to create AI Bot entity');
+      this.logger.error("Failed to create AI Bot entity");
       return;
     }
 
     // Store reference to the entity
     this.aiBotEntity = aiBotEntity;
 
-    this.logger.info('AI Bot character added successfully');
+    this.logger.info("AI Bot character added successfully");
   }
 
   /**
    * Sets up debug UI
    */
   private setupDebugUI(): void {
-    this.logger.info('Setting up debug UI');
+    this.logger.info("Setting up debug UI");
 
     // Add debug UI system if needed
     const systems = this.world.getSystems();
-    if (!systems.some(system => system instanceof CoreDebugUISystem)) {
+    if (!systems.some((system) => system instanceof CoreDebugUISystem)) {
       this.world.addSystem(new CoreDebugUISystem());
     }
 
     // Create debug UI entity
     const debugUIPrefab = createDebugUIPrefab();
     prefabRegistry.registerPrefab(debugUIPrefab);
-    const debugUIEntity = this.prefabService.createEntityFromPrefab(debugUIPrefab.name);
+    const debugUIEntity = this.prefabService.createEntityFromPrefab(
+      debugUIPrefab.name
+    );
 
     if (!debugUIEntity) {
-      this.logger.error('Failed to create debug UI entity');
+      this.logger.error("Failed to create debug UI entity");
     }
   }
 }

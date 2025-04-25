@@ -1,7 +1,7 @@
 {
   "name": "aio3d-standalone-game-template",
   "private": true,
-  "version": "0.0.4",
+  "version": "0.0.8",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,7 @@
   "dependencies": {
     "@react-three/fiber": "8.15.0",
     "@react-three/drei": "9.90.0",
-    "aio3d-core": "^0.0.7",
+    "aio3d-core": "^0.0.8",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "three": "0.158.0",
