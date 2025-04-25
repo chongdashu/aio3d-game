@@ -1,0 +1,30 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+## Three.js Coordinate System
+
+### Coordinate System Basics
+- Right-handed coordinate system:
+  - X-axis: Positive points RIGHT
+  - Y-axis: Positive points UP
+  - Z-axis: Positive points OUT of the screen (towards viewer)
+  - Negative Z points INTO the screen (away from viewer)
+
+### Units and Scale
+- Three.js uses a unitless measurement system
+- By convention, we consider 1 unit = 1 meter
+- Rotations are in radians (not degrees)
+- Default "forward" in games typically means -Z (into screen)
+
+### Rotation System
+- Rotations follow the right-hand rule
+- For Y-axis rotation (common for character turning):
+  - Positive rotation is COUNTERCLOCKWISE when looking down Y-axis
+  - Common rotation values for character facing:
+    ```
+    0       -> Face +Z (towards viewer/camera)
+    Math.PI -> Face -Z (into screen/away from camera)
+    Math.PI/2    -> Face +X (right)
+    -Math.PI/2   -> Face -X (left)

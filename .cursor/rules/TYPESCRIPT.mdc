@@ -1,0 +1,68 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# Description
+Follow these TypeScript best practices to maintain code quality and prevent common errors:
+
+## Avoiding Common TypeScript Errors
+
+1. **Unused Variables and Parameters**
+   - Only declare variables and parameters that are actually used in the code
+   - For required method parameters in base classes that aren't used in derived classes:
+     ```typescript
+     // Preferred approach for unused parameters in implemented interfaces
+     public update(_world: World): void {
+       // Implementation that doesn't use the parameter
+     }
+     ```
+   - Always mark unused parameters with underscore prefix to indicate they're intentionally unused:
+     ```typescript
+     // Marking multiple unused parameters
+     public update(_world: World, _deltaTime: number): void {
+       // Implementation that doesn't use these parameters
+     }
+     ```
+   - Document unused parameters in JSDoc comments:
+     ```typescript
+     /**
+      * Updates the system
+      * @param _world - The game world (unused)
+      * @param _deltaTime - Time elapsed since last frame (unused)
+      */
+     public update(_world: World, _deltaTime: number): void {
+       // Implementation
+     }
+     ```
+
+2. **Method Overrides**
+   - When overriding methods from base classes or implementing interfaces:
+     - Match the parameter types exactly or use more specific types
+     - Remove unused parameters only if they're not required by the interface
+     - Consider using optional parameters when appropriate: `parameter?: Type`
+
+3. **System Update Methods**
+   - For system update methods, only include parameters that are actually used:
+     ```typescript
+     // If deltaTime is not used:
+     public update(world: World): void {
+       // Implementation without deltaTime
+     }
+
+     // If neither parameter is used:
+     public update(): void {
+       // Implementation using class properties instead
+     }
+     ```
+
+4. **Interface Consistency**
+   - Maintain consistent interfaces across similar components and systems
+   - Use TypeScript interfaces to define expected method signatures
+   - Consider using abstract base classes for shared functionality
+
+5. **Type Annotations**
+   - Use explicit return types for public methods
+   - Avoid `any` types whenever possible
+   - Use union types (`type A = B | C`) for variables that can have multiple types

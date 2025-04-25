@@ -1,0 +1,33 @@
+---
+description: Git commit standards
+globs:
+alwaysApply: false
+---
+
+# Description
+Follow these standards for Git commit messages:
+
+## Commit Message Format
+
+- Pattern: `<type>(<scope>): <description>`
+- Example: `feat(auth): add OAuth2 authentication`
+- Regex pattern: `^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(?:\\([a-z ]+\\))?: [a-z].*$`
+
+## Commit Types
+
+- `build`: Changes affecting build system or external dependencies
+- `chore`: Regular maintenance tasks
+- `ci`: Changes to CI configuration files and scripts
+- `docs`: Documentation only changes
+- `feat`: New features
+- `fix`: Bug fixes
+- `perf`: Performance improvements
+- `refactor`: Code changes that neither fix bugs nor add features
+- `revert`: Revert previous commits
+- `style`: Changes that do not affect code meaning (formatting, etc)
+- `test`: Adding or modifying tests
+
+## Message Length
+
+- Title maximum length: 72 characters
+- Body maximum length: 100 characters

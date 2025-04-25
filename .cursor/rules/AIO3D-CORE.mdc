@@ -1,0 +1,209 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# CORE-001: AIO3D Core Engine Reference
+
+This rule provides a complete reference to the functionality exposed by the AIO3D Core Engine.
+
+## ECS Architecture
+
+### Entity
+- **Purpose**: Container for components with a unique ID
+- **API**:
+  ```typescript
+  const entity = new Entity();
+  entity.addComponent(componentType, component);
+  entity.getComponent<T>(componentType);
+  entity.hasComponent(componentType);
+  entity.removeComponent(componentType);
+  ```
+
+### Component
+- **Purpose**: Pure data containers with no behavior
+- **Core Components**:
+  - `TransformComponent`: Position, rotation, scale
+  - `MeshComponent`: 3D visual representation
+  - `CameraComponent`: Camera properties
+  - `PersistentComponent`: Marks entities to survive level transitions
+  - `DOMComponent`: Connects to DOM elements
+  - `RigidBodyComponent`: Physics body properties
+  - `ColliderComponent`: Physics collision shapes
+
+### System
+- **Purpose**: Contains logic operating on entities with specific components
+- **Lifecycle**:
+  ```typescript
+  class CustomSystem extends System {
+    public initialize(world: World): void { /* Setup */ }
+    public update(world: World, deltaTime: number): void { /* Logic */ }
+    public cleanup(): void { /* Resource cleanup */ }
+  }
+  ```
+- **Core Systems**:
+  - `SceneSystem`: Manages Three.js scene
+  - `RenderSystem`: Handles rendering
+  - `WindowSystem`: Manages window events
+  - `InputSystem`: Processes input
+  - `PhysicsSystem`: Handles physics simulation
+
+### World
+- **Purpose**: Central manager for entities and systems
+- **API**:
+  ```typescript
+  const world = new World();
+  world.addEntity(entity);
+  world.removeEntity(entityId);
+  world.getEntity(entityId);
+  world.addSystem(system);
+  world.update(deltaTime);
+  world.queryComponents([ComponentTypes.TRANSFORM]);
+  world.eventBus.emit("eventName", data);
+  world.eventBus.on("eventName", callback);
+  ```
+
+## Prefab System
+
+### Prefab Definition
+```typescript
+const prefab: Prefab = {
+  name: "PrefabName",
+  components: [
+    {
+      type: ComponentTypes.TRANSFORM,
+      data: { position: new THREE.Vector3(0, 1, 0) }
+    },
+    {
+      type: ComponentTypes.MESH,
+      data: {
+        geometryType: "BoxGeometry",
+        geometryArgs: [1, 1, 1],
+        materialType: "MeshStandardMaterial",
+        materialArgs: { color: 0x3080ff }
+      }
+    }
+  ]
+};
+prefabRegistry.registerPrefab(prefab);
+```
+
+### Component Factories
+```typescript
+// Register factory for component creation
+factoryRegistry.registerFactory(ComponentType, (data?: any) => {
+  return new YourComponent(data);
+});
+
+// Create entity from prefab
+const entity = prefabService.createEntityFromPrefab("PrefabName");
+```
+
+## Level Management
+
+### Level Lifecycle
+```typescript
+class GameLevel implements Level {
+  start(): void { /* Initialize level */ }
+  stop(): void { /* Pause level */ }
+  cleanup(): void { /* Clean up resources */ }
+}
+
+// Register level
+LevelRegistry.getInstance().registerLevel(
+  "LEVEL_NAME",
+  (container, world, prefabService, levelService) =>
+    new GameLevel(container, world, prefabService, levelService)
+);
+
+// Change level
+levelService.changeLevel("LEVEL_NAME");
+```
+
+## Event System
+
+```typescript
+// Listen for events
+world.eventBus.on("entityCreatedFromPrefab", handleEntity);
+
+// Emit events
+world.eventBus.emit("custom_event", { data: "value" });
+
+// Remove listener
+world.eventBus.off("entityCreatedFromPrefab", handleEntity);
+```
+
+## Physics System
+
+```typescript
+// Create physics entity
+const box = new Entity();
+box.addComponent(ComponentTypes.TRANSFORM, new TransformComponent());
+box.addComponent(ComponentTypes.RIGID_BODY, {
+  bodyType: "dynamic",
+  mass: 1.0,
+  gravityScale: 1.0
+});
+box.addComponent(ComponentTypes.COLLIDER, {
+  shape: "box",
+  size: [1, 1, 1],
+  restitution: 0.3,
+  friction: 0.8
+});
+
+// Listen for collisions
+world.eventBus.on("physics_collision_start", (event) => {
+  console.log(`Collision between ${event.bodyA} and ${event.bodyB}`);
+});
+```
+
+## WebGL Context Management
+
+```typescript
+// Handle context loss
+canvas.addEventListener("webglcontextlost", (event) => {
+  event.preventDefault();
+  // Stop animation loop, etc.
+});
+
+// Handle context restoration
+canvas.addEventListener("webglcontextrestored", () => {
+  // Reinitialize renderer, recreate scene
+  sceneSystem.reinitializeRenderer();
+  recreateSceneAfterContextRestore();
+});
+```
+
+## Service Usage
+
+### Logging Service
+```typescript
+import { loggingService, LogLevel } from "aio3d-core";
+
+// Set global log level
+loggingService.setGlobalLevel(LogLevel.DEBUG);
+
+// Create logger
+const logger = loggingService.createLogger("ModuleName");
+logger.info("Message", { contextData: "value" });
+
+// Create class logger
+const classLogger = loggingService.createClassLogger(this);
+classLogger.error("Error message", error);
+```
+
+### Model Loader Service
+```typescript
+import { ModelLoaderService } from "aio3d-core";
+
+// Load model
+const model = await ModelLoaderService.getInstance().loadModel("path/to/model.glb");
+```
+
+### Rapier Physics Service
+```typescript
+import { RapierService } from "aio3d-core";
+
+// Initialize Rapier
+await RapierService.getInstance();
+```

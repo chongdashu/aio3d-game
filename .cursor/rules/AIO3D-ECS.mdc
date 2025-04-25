@@ -1,0 +1,465 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# ECS-000: AIO3D Engine Architecture Overview
+
+This rule provides a comprehensive overview of the Entity Component System (ECS) architecture used throughout the AIO3D Engine, including related subsystems like factories, prefabs, services, and plugins.
+
+## Core ECS Principles
+
+The AIO3D Engine implements a classic Entity Component System pattern with these fundamental elements:
+
+1. **Entities**: Containers with unique IDs that hold components
+2. **Components**: Pure data containers with no behavior
+3. **Systems**: Logic that operates on entities with specific component combinations
+4. **World**: Central manager of entities and systems with event-based communication
+
+## Entity
+
+An entity in AIO3D is simply a container with a unique ID that can hold multiple components.
+
+```typescript
+// Creating an entity
+const entity = new Entity();
+
+// Adding components to an entity
+entity.addComponent(ComponentTypes.TRANSFORM, new TransformComponent());
+entity.addComponent(GameComponentTypes.PLAYER, new PlayerComponent());
+
+// Checking if entity has a component
+if (entity.hasComponent(ComponentTypes.MESH)) {
+  // Retrieving a component (with type casting)
+  const mesh = entity.getComponent<MeshComponent>(ComponentTypes.MESH);
+}
+
+// Removing a component
+entity.removeComponent(ComponentTypes.PHYSICS);
+```
+
+Key characteristics:
+- Entities have minimal functionality
+- Entities act as aggregates of components
+- Components are accessed by their unique type symbol
+- The entity implementation is in [Entity.ts](mdc:packages/core/src/ecs/Entity.ts)
+
+## Component
+
+Components are pure data containers with no behavior. They store the state that systems will operate on.
+
+```typescript
+// Example of a component implementation
+export class TransformComponent extends Component {
+  public readonly type = ComponentTypes.TRANSFORM;
+  public position: THREE.Vector3;
+  public rotation: THREE.Euler;
+  public scale: THREE.Vector3;
+
+  constructor(data?: {
+    position?: THREE.Vector3;
+    rotation?: THREE.Euler;
+    scale?: THREE.Vector3;
+  }) {
+    super();
+    this.position = data?.position?.clone() ?? new THREE.Vector3();
+    this.rotation = data?.rotation?.clone() ?? new THREE.Euler();
+    this.scale = data?.scale?.clone() ?? new THREE.Vector3(1, 1, 1);
+  }
+}
+```
+
+Key characteristics:
+- Each component has a unique type symbol
+- Components should only contain data, no methods that modify state
+- Optional `validate()` method to enforce data constraints
+- Optional `cleanup()` method to release resources
+- The abstract component base class is in [Component.ts](mdc:packages/core/src/ecs/Component.ts)
+
+## System
+
+Systems contain the logic that processes entities with specific combinations of components.
+
+```typescript
+// Example of a system implementation
+export class SpinningSystem extends System {
+  // Called when system is added to the world
+  public initialize(world: World): void {
+    // Setup work, store world reference, add event listeners
+  }
+
+  // Called every frame during world update
+  public update(world: World, deltaTime: number): void {
+    // Query entities with required components
+    const entities = world.queryComponents([
+      ComponentTypes.TRANSFORM,
+      GameComponentTypes.SPINNING_CUBE
+    ]);
+
+    // Process each entity
+    for (const entity of entities) {
+      const transform = entity.getComponent<TransformComponent>(ComponentTypes.TRANSFORM);
+      const spinData = entity.getComponent<SpinningCubeComponent>(GameComponentTypes.SPINNING_CUBE);
+
+      if (!transform || !spinData) continue;
+
+      // Apply system logic
+      transform.rotation.x += spinData.rotationSpeed.x * deltaTime;
+      transform.rotation.y += spinData.rotationSpeed.y * deltaTime;
+      transform.rotation.z += spinData.rotationSpeed.z * deltaTime;
+    }
+  }
+
+  // Called when system is removed from world
+  public cleanup(): void {
+    // Release resources, remove event listeners
+  }
+}
+```
+
+Key characteristics:
+- Systems focus on a single responsibility
+- Systems query for entities with specific component combinations
+- A system's `update()` method is called each frame
+- Systems can listen for events via the world's event bus
+- Systems should implement `cleanup()` to prevent memory leaks
+- The abstract system base class is in [System.ts](mdc:packages/core/src/ecs/System.ts)
+
+## World
+
+The World acts as the central registry for entities and systems, and manages the main update loop.
+
+```typescript
+// Creating a world
+const world = new World();
+
+// Adding a system to the world
+world.addSystem(new SceneSystem());
+world.addSystem(new RenderSystem());
+world.addSystem(new SpinningSystem());
+
+// Adding an entity to the world
+world.addEntity(entity);
+
+// Running the update loop
+function gameLoop(time) {
+  const deltaTime = (time - lastTime) / 1000;
+  lastTime = time;
+
+  // Update all systems
+  world.update(deltaTime);
+
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
+
+// Querying entities with specific components
+const renderableEntities = world.queryComponents([
+  ComponentTypes.TRANSFORM,
+  ComponentTypes.MESH
+]);
+```
+
+Key characteristics:
+- Manages collections of entities and systems
+- Orchestrates the main update loop
+- Provides `queryComponents()` for efficient entity filtering
+- Holds the central event bus for communication
+- Can be reset to clear entities while preserving systems
+- The world implementation is in [World.ts](mdc:packages/core/src/ecs/World.ts)
+
+## Component Factory System
+
+The Component Factory System decouples component creation from the core engine and prefabs.
+
+```typescript
+// Register a component factory
+factoryRegistry.registerFactory(GameComponentTypes.PLAYER, (data?: any) => {
+  // Parse and validate data from prefab
+  const playerData = data || {};
+
+  // Create the component with the data
+  const component = new PlayerComponent({
+    health: playerData.health ?? 100,
+    speed: playerData.speed ?? 5
+  });
+
+  return component;
+});
+
+// Use the factory to create a component
+const playerComponent = factoryRegistry.createComponent(
+  GameComponentTypes.PLAYER,
+  { health: 80, speed: 6 }
+);
+```
+
+Key characteristics:
+- Factories encapsulate component creation logic
+- Factories can validate and transform input data
+- Factories decouple component creation from prefabs
+- Registration happens during application initialization
+- The factory registry implementation is in [ComponentFactoryRegistry.ts](mdc:packages/core/src/ecs/ComponentFactoryRegistry.ts)
+
+## Prefab System
+
+The Prefab System enables data-driven entity creation through templates.
+
+```typescript
+// Define a prefab
+const playerPrefab: Prefab = {
+  name: "Player",
+  components: [
+    {
+      type: ComponentTypes.TRANSFORM,
+      data: { position: new THREE.Vector3(0, 1, 0) }
+    },
+    {
+      type: ComponentTypes.MESH,
+      data: {
+        geometryType: "CapsuleGeometry",
+        geometryArgs: [0.5, 1.5, 4, 8],
+        materialType: "MeshStandardMaterial",
+        materialArgs: { color: 0x3080ff }
+      }
+    },
+    {
+      type: GameComponentTypes.PLAYER,
+      data: { health: 100, speed: 5 }
+    }
+  ]
+};
+
+// Register the prefab
+prefabRegistry.registerPrefab(playerPrefab);
+
+// Create entity from prefab
+const playerEntity = prefabService.createEntityFromPrefab("Player");
+```
+
+Key characteristics:
+- Prefabs define a blueprint of components
+- Prefabs are registered with a central PrefabRegistry
+- The PrefabService uses factories to create components
+- After entity creation, an event is emitted for post-processing
+- Core classes are defined in [Prefab.ts](mdc:packages/core/src/prefabs/Prefab.ts), [PrefabRegistry.ts](mdc:packages/core/src/prefabs/PrefabRegistry.ts), and [PrefabService.ts](mdc:packages/core/src/prefabs/PrefabService.ts)
+
+## Plugin System
+
+The Plugin System allows for modular extension of engine capabilities.
+
+```typescript
+// Define a plugin
+export class MyGameFeaturePlugin implements Plugin {
+  public readonly name = "MyGameFeature";
+  public readonly version = "1.0.0";
+
+  // Register components, systems, factories, prefabs
+  public register(world: World): void {
+    // Register component factories
+    const factoryRegistry = ComponentFactoryRegistry.getInstance();
+    factoryRegistry.registerFactory(MyComponentTypes.FEATURE, createFeatureComponent);
+
+    // Register prefabs
+    prefabRegistry.registerPrefab(featurePrefab);
+
+    // Add plugin-specific systems
+    world.addSystem(new FeatureSystem());
+  }
+
+  // Initialize plugin state
+  public init(world: World): void {
+    // Setup event listeners
+    world.eventBus.on("game_start", this.handleGameStart.bind(this));
+  }
+
+  // Optional update method called each frame
+  public update(world: World, deltaTime: number): void {
+    // Perform per-frame updates
+  }
+
+  // Clean up resources
+  public cleanup(world: World): void {
+    // Remove event listeners
+    world.eventBus.off("game_start", this.handleGameStart.bind(this));
+  }
+}
+
+// Register the plugin
+registerPlugin(world, new MyGameFeaturePlugin());
+```
+
+Key characteristics:
+- Plugins provide modular, self-contained features
+- Plugins follow a standard lifecycle: register → init → update → cleanup
+- Plugins can register components, systems, factories, and prefabs
+- Plugins can listen for and emit events
+- Plugins should properly clean up resources when removed
+
+## Service System
+
+Services provide globally accessible functionality across the engine.
+
+```typescript
+// Using the logging service
+import { loggingService, LogLevel } from "aio3d-core";
+
+// Set global log level
+loggingService.setGlobalLevel(LogLevel.DEBUG);
+
+// Create a logger for a module
+const logger = loggingService.createLogger("GameSystem");
+logger.info("Game initialized", { level: "1-1" });
+
+// Create a class logger
+class PlayerSystem extends System {
+  private logger = loggingService.createClassLogger(this);
+
+  public initialize(world: World): void {
+    this.logger.debug("PlayerSystem initialized");
+  }
+}
+
+// Using the model loader service
+import { ModelLoaderService } from "aio3d-core";
+
+// Load a 3D model
+const model = await ModelLoaderService.getInstance().loadModel("assets/player.glb");
+
+// Using the physics service
+import { RapierService } from "aio3d-core";
+
+// Initialize physics
+await RapierService.getInstance();
+```
+
+Key characteristics:
+- Services provide functionality not tied to specific entities
+- Services are often implemented as singletons or dependency injected
+- Services handle cross-cutting concerns like logging, loading, and configuration
+- Services may manage resources that need proper initialization and cleanup
+
+## Level Management
+
+The Level system organizes gameplay into distinct, manageable scenes.
+
+```typescript
+// Define a level
+export class GameLevel implements Level {
+  constructor(
+    container: HTMLElement,
+    world: World,
+    prefabService: PrefabService,
+    levelService: LevelService
+  ) {
+    // Store dependencies
+  }
+
+  // Called when level becomes active
+  public start(): void {
+    // Initialize the level
+    this.setupCamera();
+    this.setupLighting();
+    this.addGameObjects();
+    this.setupUI();
+    this.startGameLoop();
+  }
+
+  // Called when level becomes inactive
+  public stop(): void {
+    // Pause the level
+    this.stopGameLoop();
+  }
+
+  // Called before level is destroyed
+  public cleanup(): void {
+    // Release all resources
+    this.cleanupUI();
+    this.stopGameLoop();
+    // Remove event listeners
+  }
+}
+
+// Register the level
+LevelRegistry.getInstance().registerLevel(
+  "GAME_LEVEL",
+  (container, world, prefabService, levelService) =>
+    new GameLevel(container, world, prefabService, levelService)
+);
+
+// Change to the level
+levelService.changeLevel("GAME_LEVEL");
+```
+
+Key characteristics:
+- Levels provide a structured approach to scene management
+- Levels encapsulate scene setup, game objects, and UI
+- Levels follow a standard lifecycle: start → stop → cleanup
+- Non-persistent entities are removed during level transitions
+- Core level classes are defined in [LevelRegistry.ts](mdc:packages/core/src/levels/LevelRegistry.ts) and [LevelService.ts](mdc:packages/core/src/levels/LevelService.ts)
+
+## Event System
+
+The Event System enables decoupled communication between systems and services.
+
+```typescript
+// Listen for events
+world.eventBus.on("player_damage", (data) => {
+  console.log(`Player ${data.entityId} took ${data.amount} damage`);
+});
+
+// Emit events
+world.eventBus.emit("player_damage", {
+  entityId: playerEntity.id,
+  amount: 10,
+  source: "enemy"
+});
+
+// Remove event listener
+world.eventBus.off("player_damage", handlePlayerDamage);
+```
+
+Key characteristics:
+- Events allow systems to communicate without direct dependencies
+- The event bus is accessible via the World instance
+- Events are identified by string names
+- Events can carry any data payload
+- Systems should remove their listeners in cleanup()
+
+## Integration and Workflow
+
+1. **Initialization Order**:
+   - Create World
+   - Create ComponentFactoryRegistry
+   - Register core and game component factories
+   - Add core systems to World
+   - Add game systems to World
+   - Register prefabs
+   - Create PrefabService
+   - Create LevelService
+   - Register and start initial level
+
+2. **Entity Creation Workflow**:
+   - Define component classes
+   - Register component factories
+   - Define prefabs using component configurations
+   - Use PrefabService to create entities from prefabs
+   - Add entities to World
+   - Systems act on entities with matching components
+
+3. **Game Loop Flow**:
+   - World.update() is called each frame
+   - World calls update() on each system in order
+   - Systems query for relevant entities
+   - Systems process entity components
+   - Systems may emit events
+   - Render system draws the current state
+
+4. **Level Transition Flow**:
+   - LevelService.changeLevel() is called
+   - Current level's stop() and cleanup() are called
+   - Non-persistent entities are removed
+   - New level instance is created
+   - New level's start() is called
+   - New level begins running
+

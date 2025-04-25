@@ -1,0 +1,56 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# The Vibe Coding Manifesto
+
+This rule outlines specific practices for balancing technical excellence with developer experience in the AIO3D engine. Apply these principles to write code that's both functionally solid and enjoyable to work with.
+
+## Practical Flow-State Development
+
+- Break complex features into implementable units that can be completed in 1-2 hours
+- Create immediate visual feedback for new components and systems
+- Structure the ECS architecture to minimize cognitive load (single-responsibility systems)
+- Use strong typing and interfaces to reduce mental overhead
+- Document API patterns before implementation to clarify your thinking
+
+## Iterative Excellence
+
+- Start with a minimal working implementation before adding complexity
+- Implement core functionality first, then add polish and edge cases
+- Test each component individually before integration
+- Refactor only when a pattern emerges across multiple use cases
+- Build systems that are easy to extend rather than perfect from the start
+
+## Technical Resilience
+
+- Implement proper cleanup in all components and systems
+- Add defensive coding with clear error messages in factory functions
+- Use the logging service with appropriate context for troubleshooting
+- Validate component data in constructors or validate() methods
+- Handle WebGL context loss/restoration in all rendering systems
+
+## Code Clarity
+
+- Follow consistent naming patterns (e.g., TransformComponent, RenderSystem)
+- Keep class inheritance shallow (prefer composition over inheritance)
+- Document public APIs with JSDoc comments
+- Structure complex algorithms with named steps
+- Avoid premature optimization that sacrifices readability
+
+## Developer-Friendly Architecture
+
+- Design APIs with discoverable, predictable patterns
+- Create factory functions for common configuration scenarios
+- Implement sensible defaults that work without extensive configuration
+- Provide helper utilities for common tasks
+- Document usage examples for complex subsystems
+
+## Balanced Innovation
+
+- Experiment in isolated feature branches or playground projects
+- Add new features as plugins first to reduce core complexity
+- Benchmark performance impacts of experimental approaches
+- Document both successes and failures in experimental systems
+- Focus innovation on solving specific pain points rather than general improvements

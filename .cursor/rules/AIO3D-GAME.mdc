@@ -1,0 +1,375 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# GAME-001: AIO3D Game Development Guide
+
+This rule provides best practices and guidelines for developing games using the AIO3D Engine.
+
+## Project Setup
+
+### Entry Point Structure
+```typescript
+// main.ts
+import "./style.css";
+import {
+  World,
+  ComponentFactoryRegistry,
+  registerCoreFactories,
+  SceneSystem,
+  RenderSystem,
+  WindowSystem,
+  PrefabService,
+  LevelService,
+  LevelRegistry,
+  loggingService,
+  LogLevel,
+} from "aio3d-core";
+
+// Initialize the game
+async function initGame() {
+  // Get container
+  const container = document.getElementById("app");
+
+  // Create world and systems
+  const world = new World();
+  const factoryRegistry = new ComponentFactoryRegistry();
+
+  // Register factories
+  registerCoreFactories(factoryRegistry);
+  registerGameFactories(factoryRegistry);
+
+  // Add core systems
+  world.addSystem(new SceneSystem());
+  world.addSystem(new WindowSystem());
+  world.addSystem(new RenderSystem());
+
+  // Add game-specific systems
+  world.addSystem(new YourCustomSystem());
+
+  // Create services
+  const prefabService = new PrefabService(world, factoryRegistry);
+  const levelService = new LevelService(container, world, prefabService);
+
+  // Register and start first level
+  LevelRegistry.getInstance().registerLevel("MAIN_MENU",
+    (container, world, prefabService, levelService) =>
+      new MainMenuLevel(container, world, prefabService, levelService)
+  );
+
+  // Start first level
+  levelService.changeLevel("MAIN_MENU");
+}
+
+initGame().catch(error => console.error("Game initialization failed:", error));
+```
+
+## Creating Custom Components
+
+### Component Type Definition
+```typescript
+// GameComponentTypes.ts
+export const GameComponentTypes = {
+  PLAYER: Symbol.for("game.player"),
+  ENEMY: Symbol.for("game.enemy"),
+  HEALTH: Symbol.for("game.health"),
+} as const;
+
+export type GameComponentKeys =
+  (typeof GameComponentTypes)[keyof typeof GameComponentTypes];
+```
+
+### Component Implementation
+```typescript
+// PlayerComponent.ts
+import { Component } from "aio3d-core";
+import { GameComponentTypes } from "./GameComponentTypes";
+import * as THREE from "three";
+
+export class PlayerComponent extends Component {
+  public readonly type = GameComponentTypes.PLAYER;
+  public speed: number;
+  public direction: THREE.Vector3;
+
+  constructor(data?: { speed?: number }) {
+    super();
+    this.speed = data?.speed ?? 5;
+    this.direction = new THREE.Vector3();
+  }
+
+  // Optional validation method
+  public validate(): void {
+    this.speed = Math.max(1, Math.min(10, this.speed));
+  }
+}
+```
+
+### Component Factory Registration
+```typescript
+// factories.ts
+import { ComponentFactoryRegistry } from "aio3d-core";
+import { GameComponentTypes } from "./components/GameComponentTypes";
+import { PlayerComponent } from "./components/PlayerComponent";
+
+export function registerGameFactories(factoryRegistry: ComponentFactoryRegistry): void {
+  factoryRegistry.registerFactory(
+    GameComponentTypes.PLAYER,
+    (data?: any) => {
+      return new PlayerComponent(data);
+    }
+  );
+}
+```
+
+## Creating Custom Systems
+
+```typescript
+// PlayerMovementSystem.ts
+import { System, World, ComponentTypes, TransformComponent } from "aio3d-core";
+import { GameComponentTypes } from "../components/GameComponentTypes";
+import { PlayerComponent } from "../components/PlayerComponent";
+
+export class PlayerMovementSystem extends System {
+  private boundHandleInput: any;
+
+  constructor() {
+    super();
+    this.boundHandleInput = this.handleInput.bind(this);
+  }
+
+  public initialize(world: World): void {
+    this.world = world;
+    // Subscribe to events
+    world.eventBus.on("player_input", this.boundHandleInput);
+  }
+
+  public update(world: World, deltaTime: number): void {
+    const players = world.queryComponents([
+      GameComponentTypes.PLAYER,
+      ComponentTypes.TRANSFORM
+    ]);
+
+    for (const entity of players) {
+      const player = entity.getComponent<PlayerComponent>(GameComponentTypes.PLAYER);
+      const transform = entity.getComponent<TransformComponent>(ComponentTypes.TRANSFORM);
+
+      if (!player || !transform) continue;
+
+      // Apply movement
+      transform.position.x += player.direction.x * player.speed * deltaTime;
+      transform.position.z += player.direction.z * player.speed * deltaTime;
+    }
+  }
+
+  private handleInput(data: any): void {
+    // Process input event data
+    // Update player direction based on input
+  }
+
+  public cleanup(): void {
+    // Remove event listeners
+    if (this.world?.eventBus) {
+      this.world.eventBus.off("player_input", this.boundHandleInput);
+    }
+    this.world = null;
+  }
+}
+```
+
+## Creating Prefabs
+
+```typescript
+// PlayerPrefab.ts
+import { Prefab, prefabRegistry, ComponentTypes } from "aio3d-core";
+import { GameComponentTypes } from "../components/GameComponentTypes";
+import * as THREE from "three";
+
+export const createPlayerPrefab = (config: {
+  position?: THREE.Vector3,
+  speed?: number,
+}): Prefab => {
+  return {
+    name: "Player",
+    components: [
+      {
+        type: ComponentTypes.TRANSFORM,
+        data: {
+          position: config.position ?? new THREE.Vector3(0, 1, 0),
+          rotation: new THREE.Euler(0, 0, 0),
+          scale: new THREE.Vector3(1, 1, 1),
+        }
+      },
+      {
+        type: ComponentTypes.MESH,
+        data: {
+          geometryType: "CapsuleGeometry",
+          geometryArgs: [0.5, 1.5, 4, 8],
+          materialType: "MeshStandardMaterial",
+          materialArgs: { color: 0x3080ff },
+        }
+      },
+      {
+        type: GameComponentTypes.PLAYER,
+        data: {
+          speed: config.speed ?? 5,
+        }
+      },
+      {
+        type: ComponentTypes.RIGID_BODY,
+        data: {
+          bodyType: "dynamic",
+          mass: 80,
+          gravityScale: 1.0,
+        }
+      },
+      {
+        type: ComponentTypes.COLLIDER,
+        data: {
+          shape: "capsule",
+          size: [0.5, 1.5],
+          friction: 0.2,
+        }
+      },
+    ]
+  };
+};
+
+// Register prefab
+prefabRegistry.registerPrefab(
+  createPlayerPrefab({ position: new THREE.Vector3(0, 1, 0) })
+);
+```
+
+## Level Implementation
+
+```typescript
+// GameLevel.ts
+import * as THREE from "three";
+import {
+  World,
+  Level,
+  PrefabService,
+  LevelService,
+  ComponentTypes,
+} from "aio3d-core";
+import { createPlayerPrefab } from "../prefabs/PlayerPrefab";
+import { createTerrainPrefab } from "../prefabs/TerrainPrefab";
+import { prefabRegistry } from "aio3d-core";
+
+export class GameLevel extends BaseLevel implements Level {
+  constructor(
+    container: HTMLElement,
+    world: World,
+    prefabService: PrefabService,
+    levelService: LevelService
+  ) {
+    super(container, world, prefabService, levelService);
+  }
+
+  protected setupLevel(): void {
+    this.setupCamera();
+    this.setupLighting();
+    this.addGameObjects();
+    this.setupUI();
+  }
+
+  private setupCamera(): void {
+    // Create camera
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      this.container.clientWidth / this.container.clientHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(0, 5, 10);
+
+    // Add camera entity
+    // ...
+  }
+
+  private setupLighting(): void {
+    // Add ambient light
+    const ambientLight = new THREE.AmbientLight(0x404040, 1);
+    this.sceneSystem.getScene().add(ambientLight);
+
+    // Add directional light with shadows
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(5, 10, 7.5);
+    dirLight.castShadow = true;
+
+    // Configure shadow properties
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 50;
+    dirLight.shadow.bias = -0.001;
+
+    this.sceneSystem.getScene().add(dirLight);
+  }
+
+  private addGameObjects(): void {
+    // Add terrain
+    const terrainPrefab = createTerrainPrefab();
+    prefabRegistry.registerPrefab(terrainPrefab);
+    this.prefabService.createEntityFromPrefab(terrainPrefab.name);
+
+    // Add player
+    const playerPrefab = createPlayerPrefab({
+      position: new THREE.Vector3(0, 3, 0)
+    });
+    prefabRegistry.registerPrefab(playerPrefab);
+    this.prefabService.createEntityFromPrefab(playerPrefab.name);
+  }
+
+  private setupUI(): void {
+    // Create UI container
+    const uiContainer = document.createElement("div");
+    uiContainer.className = "game-ui";
+    this.container.appendChild(uiContainer);
+
+    // Add UI elements
+    // ...
+  }
+
+  protected cleanupLevelSpecifics(): void {
+    // Remove event listeners
+
+    // Remove DOM elements
+    const uiElements = this.container.querySelectorAll(".game-ui");
+    uiElements.forEach(el => el.remove());
+  }
+
+  protected recreateSceneAfterContextRestore(): void {
+    // Reinitialize scene elements after webgl context loss/restore
+    this.setupLighting();
+  }
+}
+```
+
+## Best Practices
+
+### Performance Optimization
+- Use object pooling for frequently created/destroyed entities
+- Minimize component access in hot loops
+- Batch operations where possible
+- Use appropriate physics collider shapes (simpler is better)
+- Use level of detail (LOD) for complex models
+
+### Code Organization
+- Group related components together
+- Create factory functions for prefab variants
+- Split large systems into focused subsystems
+- Use events for decoupled communication
+
+### Error Handling
+- Add proper error handling in system methods
+- Validate component data in factories
+- Implement proper WebGL context loss/restoration
+- Use the logging service with appropriate levels
+
+### Memory Management
+- Always cleanup resources in the cleanup() method
+- Dispose Three.js resources (geometries, materials, textures)
+- Remove event listeners
+- Clear references to help garbage collection
